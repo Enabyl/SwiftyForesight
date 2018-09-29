@@ -1,7 +1,7 @@
 Pod::Spec.new do |s|
 
   s.name         = "SwiftyForesight"
-  s.version      = "1.0.0"
+  s.version      = "1.0.1"
   s.summary      = "Foresight Swift API"
   s.description  = "Swift API for integrating mobile applications with Foresight cloud framework."
   s.homepage     = "https://github.com/Enabyl/SwiftyForesight.git"
