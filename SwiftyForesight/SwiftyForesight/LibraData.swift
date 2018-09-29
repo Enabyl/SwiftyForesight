@@ -135,7 +135,14 @@ public class LibraData {
     
     // Function for formatting .csv file from LibraData object
     // The output will be a Data object saved to a specified URL with specified filename
-    public func formatData(withSavePath savePath: URL, completion: ((Bool, Data) -> Void)? = nil) {
+    public func formatData(completion: ((Bool, Data, URL) -> Void)? = nil) {
+        
+        // Initialize formatter to format date (for filename)
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyyMMddHHmmss"
+        
+        // Set save path
+        let savePath = self.rootFilepath.appendingPathComponent("\(cloudManager.userID)_\(formatter.string(from: Date())).csv")
         
         // Set placeholder for string
         var dataString: String = ""
@@ -154,17 +161,17 @@ public class LibraData {
         guard let _ = self.data[LibraDataKeys.features.rawValue] else {
             // Print error message and return completion
             print("Error in LibraData.formatData(): Features have not been written to LibraData.data")
-            completion?(false, Data()); return}
+            completion?(false, Data(), savePath); return}
         guard let _ = self.data[LibraDataKeys.labels.rawValue] else {
             // Print error message and return completion
             print("Error in LibraData.formatData(): Labels have not been written to LibraData.data")
-            completion?(false, Data()); return}
+            completion?(false, Data(), savePath); return}
         
         // Ensure that the number of feature vectors is correct
         if self.data[LibraDataKeys.features.rawValue]!.count != self.numInputFeatures {
             // Print an error message and return completion
             print("Error in LibraData.formatData(): The number of feature vectors is not correct")
-            completion?(false, Data()); return
+            completion?(false, Data(), savePath); return
         }
         
         // Ensure that all vectors in features and labels have the same length
@@ -175,7 +182,7 @@ public class LibraData {
             if vector.count != properLength {
                 // Print an error message and return completion
                 print("Error in LibraData.formatData(): Feature vectors do not have the same length")
-                completion?(false, Data()); return
+                completion?(false, Data(), savePath); return
             }
         }
         
@@ -183,7 +190,7 @@ public class LibraData {
         if self.data[LibraDataKeys.labels.rawValue]!.count != properLength {
             // Print an error message and return completion
             print("Error in LibraData.formatData(): The number of label vectors and features is not the same")
-            completion?(false, Data()); return
+            completion?(false, Data(), savePath); return
         }
         
         // Ensure that each label vector has the same length
@@ -191,7 +198,7 @@ public class LibraData {
             if vector.count != self.numOutputFeatures {
                 // Print an error message and return completion
                 print("Error in LibraData.formatData(): The label vectors do not have the proper length")
-                completion?(false, Data()); return
+                completion?(false, Data(), savePath); return
             }
         }
         
@@ -228,16 +235,16 @@ public class LibraData {
         } catch {
             // Print error message if the write operation failed
             print("Error in LibraData.formatData(): Unable to write to file")
-            completion?(false, Data()); return
+            completion?(false, Data(), savePath); return
         }
         
         // Write contents of URL to data object for subsequent use
         if let dataObject = try? Data(contentsOf: savePath) {
-            completion?(true, dataObject); return
+            completion?(true, dataObject, savePath); return
         } else {
             // If there is an error, print an error message and return completion
             print("Error in LibraData.formatData(): Unable to read from file")
-            completion?(false, Data()); return
+            completion?(false, Data(), savePath); return
         }
         
     }
@@ -312,7 +319,10 @@ public class LibraData {
     }
     
     // Function for uploading data to remote server
-    public func uploadDataToRemote(fromLocalPath localPath: URL, toRemoteFilename remoteName: String, completion: ((Bool) -> Void)? = nil) {
+    public func uploadDataToRemote(fromLocalPath localPath: URL, completion: ((Bool) -> Void)? = nil) {
+        
+        // Set remote filename
+        let remoteName = localPath.lastPathComponent
         
         // Ensure a file exists at the localFilepath
         guard FileManager.default.fileExists(atPath: localPath.path) else {

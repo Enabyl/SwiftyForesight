@@ -25,13 +25,15 @@ public class CloudManager {
     public var writeBucket: String  // S3 bucket name for *writing* data
     public var readBucket: String   // S3 bucket name for *reading* data
     public var identityID: String   // Identity ID for AWS permissions
+    public var userID: String       // User ID (application user)
     
-    public init(identityID id: String, writeBucket wb: String? = nil, readBucket rb: String? = nil) {
+    public init(identityID iid: String, userID uid: String, writeBucket wb: String? = nil, readBucket rb: String? = nil) {
         
         // Write attribute values
         self.writeBucket = wb ?? "N/A"
         self.readBucket = rb ?? "N/A"
-        self.identityID = id
+        self.identityID = iid
+        self.userID = uid
         
     }
     
@@ -81,7 +83,7 @@ public class CloudManager {
                     print("Message from CloudManager.uploadFile(): Upload successful"); completion?(true)
                 }
             })
-        
+            
         }
         
         // Define transfer utility as default
