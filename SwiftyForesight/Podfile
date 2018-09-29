@@ -1,0 +1,11 @@
+platform :ios, '12.0'
+
+target 'SwiftyForesight' do
+
+  use_frameworks!
+	pod 'AWSMobileClient'
+	pod 'AWSS3'
+	pod 'AWSCognito'
+	pod 'AWSDynamoDB'
+
+end
