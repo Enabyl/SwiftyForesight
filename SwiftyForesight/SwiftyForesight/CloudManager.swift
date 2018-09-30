@@ -27,6 +27,9 @@ public class CloudManager {
     public var identityID: String   // Identity ID for AWS permissions
     public var userID: String       // User ID (application user)
     
+    // Initialize static variable for holding DynamoDB table name
+    public static var tableName = String()
+    
     public init(identityID iid: String, userID uid: String, writeBucket wb: String? = nil, readBucket rb: String? = nil) {
         
         // Write attribute values
@@ -256,21 +259,21 @@ public class CloudManager {
         // Create a data item for organizing data for upload
         let dataItem = DatabaseClass()
         
-        // Write metadata items to DatabaseClass
+        // Write required metadata items to DatabaseClass
         dataItem?._userID = dict["_userID"]         // Hash Key
         dataItem?._eventDate = dict["_eventDate"]   // Range Key
         
-        // -----------------------------------------------------------------
-        // EDIT CODE BELOW ONLY
-        // -----------------------------------------------------------------
-        
-        // MARK: EDIT
-        // If there are other metadata items in your DatabaseClass, populate them here
-        // Format: dataItem?._attribute = dict["_attribute"]    // My Custom Attribute
-        
-        // -----------------------------------------------------------------
-        // EDIT CODE ABOVE ONLY
-        // -----------------------------------------------------------------
+        // Add additional metadata fields if provided by the user
+        if dict["_m0"] != nil { dataItem?._m0 = dict["_m0"] }   // M0
+        if dict["_m1"] != nil { dataItem?._m0 = dict["_m1"] }   // M1
+        if dict["_m2"] != nil { dataItem?._m0 = dict["_m2"] }   // M2
+        if dict["_m3"] != nil { dataItem?._m0 = dict["_m3"] }   // M3
+        if dict["_m4"] != nil { dataItem?._m0 = dict["_m4"] }   // M4
+        if dict["_m5"] != nil { dataItem?._m0 = dict["_m5"] }   // M5
+        if dict["_m6"] != nil { dataItem?._m0 = dict["_m6"] }   // M6
+        if dict["_m7"] != nil { dataItem?._m0 = dict["_m7"] }   // M7
+        if dict["_m8"] != nil { dataItem?._m0 = dict["_m8"] }   // M8
+        if dict["_m9"] != nil { dataItem?._m0 = dict["_m9"] }   // M9
         
         // Save new item
         mapper.save(dataItem!, completionHandler: {
@@ -346,32 +349,41 @@ private class DatabaseClass: AWSDynamoDBObjectModel, AWSDynamoDBModeling {
     @objc public var _userID: String?
     @objc public var _eventDate: String?
     
-    // -----------------------------------------------------------------
-    // EDIT CODE BELOW ONLY
-    // -----------------------------------------------------------------
-    
-    // MARK: EDIT
-    // Specify additional (optional) attributes here
-    // @objc public var _customMetadataAttribute: String? ...
+    // Optional additional metadata fields
+    // The user should keep track of what data is being stored in each field
+    @objc public var _m0: String?
+    @objc public var _m1: String?
+    @objc public var _m2: String?
+    @objc public var _m3: String?
+    @objc public var _m4: String?
+    @objc public var _m5: String?
+    @objc public var _m6: String?
+    @objc public var _m7: String?
+    @objc public var _m8: String?
+    @objc public var _m9: String?
     
     // Specify table name here
     class func dynamoDBTableName() -> String {
-        return "TableName"
+        return CloudManager.tableName
     }
     
     // Create a table of key - property values
-    // If additional attributes were specified above, they should be added as a row to this table
-    // Format: "_customMetadataAttribute : "customMetadataAttribute",
     override class func jsonKeyPathsByPropertyKey() -> [AnyHashable: Any] {
         return [
             "_userId" : "userId",
             "_eventDate" : "eventDate",
+            "_m0" : "m0",
+            "_m1" : "m1",
+            "_m2" : "m2",
+            "_m3" : "m3",
+            "_m4" : "m4",
+            "_m5" : "m5",
+            "_m6" : "m6",
+            "_m7" : "m7",
+            "_m8" : "m8",
+            "_m9" : "m9",
         ]
     }
-    
-    // -----------------------------------------------------------------
-    // EDIT CODE ABOVE ONLY
-    // -----------------------------------------------------------------
     
     // Hash key attribute (do not modify)
     class func hashKeyAttribute() -> String {

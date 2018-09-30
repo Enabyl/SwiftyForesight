@@ -120,7 +120,8 @@ public class LibraData {
     // Format: [AttributeName1:AttributeValue1, AttributeName2:AttributeValue2 ...]
     // NOTE: The first attribute is the sort key and the second attribute is the range key
     // NOTE: The first attribute key is always "_userID" and second attribute key is always "_eventDate"
-    // E.g. attributes = ["_userID":"johnsmith", "_eventDate":"07102018125556", "_sensitivity": "65"]
+    // NOTE: All subsequent keys must have the format "_m0" ... "_m9". Up to 10 additional metadata fields may be specified.
+    // E.g. attributes = ["_userID":"johnsmith", "_eventDate":"07102018125556", "_m0": "65"]
     public func addMetadata(withAttributes attributes: [String: String]) {
         self.metadata = attributes
     }
