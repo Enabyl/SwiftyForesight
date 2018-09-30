@@ -91,23 +91,25 @@ myData.retryFailedUploads()
 If the user desires to delete all data files associated with failed uploads on the device, `LibraData` also includes the function `clearErrorLogs()`, which can be used to clear this data if it begins to consume more memory than is desirable.
 
 #### Incorporating Metadata
-When data files are transmitted to remote resources for model training, it may be useful to include metadata to add context for training algorithms. Metadata is stored in a DynamoDB database. In order to enable metadata, the user must make the following modifications.
+When data files are transmitted to remote resources for model training, it may be useful to include metadata to add context for training algorithms. Metadata is stored in a DynamoDB database. In order to enable metadata, the user must take the following steps.
 
-1. In *CloudManager.swift*, in the method `uploadMetadata()`, add custom attributes for your DynamoDB table as explained in the comments provided. (Lines 261-271)
-2. In *CloudManager.swift*, in the class `DatabaseClass`, specify your custom attributes, table name, and update the key - property table as specified in the comments. (Lines 347-372)
+1. After initializing your `CloudManager`, specify your DynamoDB table name with `CloudManager.tableName = <YourTableName>`.
+2. To add your metadata to your `LibraData` object, use the function `myData.addMetadata()`.
+3. To upload to DynamoDB, use the function `myData.uploadMetadataToRemote()`.
 
-Note that `_userID` and `_eventDate` are required hash and range key attributes, respectively, and should not be modified or replaced by the user. However, any additional attribute fields may be added. Metadata may be added to the `LibraData` object with the function `addMetadata()`, which accepts metadata as a dictionary. A representative example is shown below.
+Data passed into your `LibraData` object with `addMetadata()` should be a dictionary with the following format:
 
 ```swift
-// Construct a metadata dictionary
-let myMetadata = ["_userID" : "User01", "_eventDate" : "20180929073331", "_customAttr" : "hello world"]
-myData.addMetadata(withAttributes: myMetadata)  // Add metadata to object
+// Generating a metadata dictionary
+let myDict = ["_userID" : <userID>, "_eventDate": <eventDate>, "_m0": <metadata0>, "_m1": <metadata1>, ...]
 ```
 
-Subsequently, metadata may be uploaded as well with the command `myData.uploadMetadataToRemote()`.
+The default DynamoDB table provided by the Foresight framework accepts up to 12 fields. `_userID` and `_eventDate` are required hash and range keys, respectively, however the user may choose to store up to 10 additional fields of metadata at their discretion. These fields may be added to the metadata dictionary with the keys `_m0` to `_m9` respectively. Note that these field names may not be changed, so the user must document and standardize what each metadata field is storing. The best practice guideline for storing metadata is that the `_userID` used in this dictionary should be the same as the field `CloudManager.userID`, since the function `removeAllUserMetadata()` queries the DynamoDB database based on the `_userID` hash key.
 
 #### Data Management
 To maintain regulatory compliance, it is often necessary to give the user of an application the ability to delete all data and metadata that has been collected remotely. `LibraData` provides the function `clearData()` for removing all data that is currently being processed (i.e. neither uploaded nor locally saved). For deleting remote files, we must use `CloudManager` directly. `CloudManager` provides the functions `removeAllUserFiles()` for clearing all data *files* from remote resources, and the function `removeAllUserMetadata()` for removing all *metadata*.
 
 ## Version History
-- *v1.0.1*: Initial Version (under evaluation)
+- *v1.0.0*: Initial Version
+- *v1.0.1*: Automated generation of local and remote filenames in proper format.
+- *v1.0.2*: Automated handling of DynamoDB table attributes.
