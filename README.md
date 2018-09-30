@@ -7,6 +7,8 @@ Swift API for integrating mobile applications with Foresight cloud framework.
 ## User Guide
 This library provides an easy interface between iOS devices and the Foresight cloud platform. iOS devices built on the Foresight framework must (1) connect to AWS cloud services, (2) transmit data in the proper format, and (3) download and run custom computational models as they are remotely generated. For these three tasks, this library provides three important classes: `CloudManager`, `LibraData`, and `LibraModel`.
 
+**Important Note**: All asynchronous functions in `SwiftyForesight` include completion handlers. Please use these handlers in cases where data transfer should be synchronized with other processes by using `DispatchGroup`. 
+
 ### AWS Dependencies
 As the Foresight framework utilizes Amazon Web Services, important AWS dependencies are installed with the `SwiftyForesight` CocoaPod, if they aren't installed already. To use this library, ensure that you have obtained information about your AWS resources from an Enabyl representative. Also ensure that you have received your `awsconfiguration.json` file and have included it in your main project directory.
 
@@ -18,8 +20,9 @@ The `CloudManager` class manages the data connection between the iOS application
 
 ```swift
 // Instantiate CloudManager object
-let cloudManager = CloudManager(identityID: "<name>", writeBucket: "<name>", readBucket: "<name>")
+let cloudManager = CloudManager(identityID: "<name>", userID: "<name>", writeBucket: "<name>", readBucket: "<name>")
 ```
+An **important note** is that each user on a device using the Foresight framework should have a unique alphanumeric user ID assigned to them. An easy way to generate this ID is to use `UUID.uuidstring()` and storing this ID in the Keychain or User Defaults. This ID is used by the Foresight framework to identify user-specific models, generate performance reports, and more, so it is in the developer's best interest to ensure this ID is kept consistent.
 
 This class requires the user to specify their identity ID (found in their `awsconfiguration.json` file), the S3 bucket name to which they are transmitting data, and the S3 bucket name from which computational models are downloaded. There is only one use case in which you may wish to directly call a `CloudManager` method, as detailed [below](#datamanagement).
 
@@ -73,17 +76,19 @@ let labels = [labelVector1, labelVector2, labelVector3] // Label vector
 To format the data for upload, add the feature and label vectors into the `LibraData` object and upload.
 
 ```swift
-myData.addFeatures(features)              // Add features to object
-myData.addLabels(labels)                  // Add labels to object
-myData.formatData(withSavePath: <path>)   // Formatting data for upload
-myData.uploadDataToRemote(fromLocalFile: <path>, toRemoteFilename: "example.csv")  // Uploading data to remote
+myData.addFeatures(features)  // Add features to object
+myData.addLabels(labels)      // Add labels to object
+myData.formatData()           // Formatting data for upload
+myData.uploadDataToRemote(fromLocalFile: <path>)  // Uploading data to remote
 ```
-The function `formatData()` formats the training data and saves it as a local .csv file. This file is then uploaded to the remote AWS resource with the function `uploadDataToRemote`. Note that `LibraData` includes a safeguard to retry all failed uploads at a later time (e.g., when network connection is lost).
+The function `formatData()` formats the training data and saves it as a local .csv file. This file is automatically given the name `<userID>_<eventDate>.csv` so that it may be properly processed at a later time. This file is then uploaded to the remote AWS resource with the function `uploadDataToRemote()` with the same filename. Notice that the local file path must be specified -- this is because the function `uploadDataToRemote()` is also used by other functions in the `SwiftyForesight` framework. However, the function `formatData()` returns the filename in a completion handler, which may then be passed directly to `uploadDataToRemote()`. Note also that `LibraData` includes a safeguard to retry all failed uploads at a later time (e.g., when network connection is lost).
 
 ```swift
 // Retrying all failed uploads
 myData.retryFailedUploads()
 ```
+
+If the user desires to delete all data files associated with failed uploads on the device, `LibraData` also includes the function `clearErrorLogs()`, which can be used to clear this data if it begins to consume more memory than is desirable.
 
 #### Incorporating Metadata
 When data files are transmitted to remote resources for model training, it may be useful to include metadata to add context for training algorithms. Metadata is stored in a DynamoDB database. In order to enable metadata, the user must make the following modifications.
@@ -105,4 +110,4 @@ Subsequently, metadata may be uploaded as well with the command `myData.uploadMe
 To maintain regulatory compliance, it is often necessary to give the user of an application the ability to delete all data and metadata that has been collected remotely. `LibraData` provides the function `clearData()` for removing all data that is currently being processed (i.e. neither uploaded nor locally saved). For deleting remote files, we must use `CloudManager` directly. `CloudManager` provides the functions `removeAllUserFiles()` for clearing all data *files* from remote resources, and the function `removeAllUserMetadata()` for removing all *metadata*.
 
 ## Version History
-- *v1.0.0*: Initial Version (under evaluation)
+- *v1.0.1*: Initial Version (under evaluation)
