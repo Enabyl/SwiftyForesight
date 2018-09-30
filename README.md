@@ -1,15 +1,17 @@
-# SwiftyForesight (beta)
+![ForesightSwiftAPILogo](https://github.com/Enabyl/SwiftyForesight/blob/master/foresightswiftapi.png)
+
+# SwiftyForesight
 Swift API for integrating mobile applications with Foresight cloud framework.
 
 ## Contents
 - [Installation](#installation)
-- [User Guide](#userguide)
-  - [AWS Dependencies](#awsdependencies)
-  - [Importing SwiftyForesight](`importingswiftyforesight)
+- [User Guide](#user-guide)
+  - [AWS Dependencies](#aws-dependencies)
+  - [Importing SwiftyForesight](#importing-swiftyforesight)
   - [CloudManager](#cloudmanager)
   - [LibraModel](#libramodel)
   - [LibraData](#libradata)
-- [Version History](#versionhistory)
+- [Version History](#version-history)
 
 ## Installation
 `SwiftyForesight` is available for installation via CocoaPods. In your Podfile, enter `pod 'SwiftyForesight'`, then from the terminal enter `pod install`.
