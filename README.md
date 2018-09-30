@@ -1,6 +1,16 @@
 # SwiftyForesight (beta)
 Swift API for integrating mobile applications with Foresight cloud framework.
 
+## Contents
+- [Installation](#installation)
+- [User Guide](#userguide)
+  - [AWS Dependencies](#awsdependencies)
+  - [Importing SwiftyForesight](`importingswiftyforesight)
+  - [CloudManager](#cloudmanager)
+  - [LibraModel](#libramodel)
+  - [LibraData](#libradata)
+- [Version History](#versionhistory)
+
 ## Installation
 `SwiftyForesight` is available for installation via CocoaPods. In your Podfile, enter `pod 'SwiftyForesight'`, then from the terminal enter `pod install`.
 
@@ -101,10 +111,19 @@ Data passed into your `LibraData` object with `addMetadata()` should be a dictio
 
 ```swift
 // Generating a metadata dictionary
-let myDict = ["_userID" : <userID>, "_eventDate": <eventDate>, "_m0": <metadata0>, "_m1": <metadata1>, ...]
+let myDict = [Keys.hash : <userID>, Keys.range: <eventDate>, Keys.m0: <metadata0>, Keys.m1: <metadata1>, ...]
 ```
 
-The default DynamoDB table provided by the Foresight framework accepts up to 12 fields. `_userID` and `_eventDate` are required hash and range keys, respectively, however the user may choose to store up to 10 additional fields of metadata at their discretion. These fields may be added to the metadata dictionary with the keys `_m0` to `_m9` respectively. Note that these field names may not be changed, so the user must document and standardize what each metadata field is storing. The best practice guideline for storing metadata is that the `_userID` used in this dictionary should be the same as the field `CloudManager.userID`, since the function `removeAllUserMetadata()` queries the DynamoDB database based on the `_userID` hash key.
+The default DynamoDB table provided by the Foresight framework accepts up to 12 fields. `_userID` and `_eventDate` are required hash and range keys, respectively, however the user may choose to store up to 10 additional fields of metadata at their discretion. These fields may be added to the metadata dictionary with the keys `_m0` to `_m9` respectively. To prevent input errors, the `Keys` class is provided, which contains static variable holding the proper names of the hash key, range key, and 10 metadata fields. Note that these field names may not be changed, so the user must document and standardize what each metadata field is storing. The best practice guideline for storing metadata is that the `<userID>` used in this dictionary should be the same as the field `CloudManager.userID`, since the function `removeAllUserMetadata()` queries the DynamoDB database based on the value of `CloudManager.userID`.
+
+Metadata may also be queried with the `LibraData` function `queryData()`, which returns all metadata entries between two specified dates. Dates should be formatted as follows in order for the query to work properly.
+
+```swift
+let myDate = Date()   // Specify date here
+let formatter = DateFormatter()
+formatter.dateFormat = "yyyyMMhhmmss""
+let properDate = formatter.string(from: myDate)
+```
 
 #### Data Management
 To maintain regulatory compliance, it is often necessary to give the user of an application the ability to delete all data and metadata that has been collected remotely. `LibraData` provides the function `clearData()` for removing all data that is currently being processed (i.e. neither uploaded nor locally saved). For deleting remote files, we must use `CloudManager` directly. `CloudManager` provides the functions `removeAllUserFiles()` for clearing all data *files* from remote resources, and the function `removeAllUserMetadata()` for removing all *metadata*.
@@ -113,3 +132,4 @@ To maintain regulatory compliance, it is often necessary to give the user of an 
 - *v1.0.0*: Initial Version
 - *v1.0.1*: Automated generation of local and remote filenames in proper format.
 - *v1.0.2*: Automated handling of DynamoDB table attributes.
+- *v1.0.3*: Added metadata querying and improved organization of metadata keys.
