@@ -176,7 +176,7 @@ public class CloudManager {
     }
     
     // Define function for removing all user files from S3 bucket
-    public func removeAllUserFiles(forUser user: String, completion: ((Bool) -> Void)? = nil) {
+    public func removeAllUserFiles(completion: ((Bool) -> Void)? = nil) {
         
         // Set credentials provider and configuration
         let credentialsProvider = AWSCognitoCredentialsProvider(regionType: AWSRegionType.USEast1, identityPoolId: identityID)
@@ -194,7 +194,7 @@ public class CloudManager {
         // Create list objecs request for objects with specified prefix
         let listRequest = AWSS3ListObjectsRequest()
         listRequest?.bucket = self.writeBucket
-        listRequest?.prefix = user
+        listRequest?.prefix = self.userID
         
         // List objects
         s3.listObjects(listRequest!).continueWith { (task: AWSTask) -> AnyObject? in
@@ -238,21 +238,6 @@ public class CloudManager {
     // Define function for uploading metadata to AWS DynamoDB
     public func uploadMetadata(forDictionary dict: [String:String], completion: ((Bool) -> Void)? = nil) {
         
-        // Ensure that dictionary contains values for hash and range keys
-        // Hash Key
-        guard dict["_userID"] != nil else {
-            // Print error and return completion
-            print("Error in CloudManager.uploadMetadata(): No value for _userID attribute")
-            completion?(false); return
-        }
-        
-        // Range Key
-        guard dict["_eventDate"] != nil else {
-            // Print error and return completion
-            print("Error in CloudManager.uploadMeta(): No value for _eventDate attribute")
-            completion?(false); return
-        }
-        
         // Create DynamoDB Object Mapper
         let mapper = AWSDynamoDBObjectMapper.default()
         
@@ -260,20 +245,20 @@ public class CloudManager {
         let dataItem = DatabaseClass()
         
         // Write required metadata items to DatabaseClass
-        dataItem?._userID = dict["_userID"]         // Hash Key
-        dataItem?._eventDate = dict["_eventDate"]   // Range Key
+        dataItem?._userID = dict[Keys.hash]     // Hash Key (userID)
+        dataItem?._eventDate = dict[Keys.range] // Range Key (eventDate)
         
         // Add additional metadata fields if provided by the user
-        if dict["_m0"] != nil { dataItem?._m0 = dict["_m0"] }   // M0
-        if dict["_m1"] != nil { dataItem?._m0 = dict["_m1"] }   // M1
-        if dict["_m2"] != nil { dataItem?._m0 = dict["_m2"] }   // M2
-        if dict["_m3"] != nil { dataItem?._m0 = dict["_m3"] }   // M3
-        if dict["_m4"] != nil { dataItem?._m0 = dict["_m4"] }   // M4
-        if dict["_m5"] != nil { dataItem?._m0 = dict["_m5"] }   // M5
-        if dict["_m6"] != nil { dataItem?._m0 = dict["_m6"] }   // M6
-        if dict["_m7"] != nil { dataItem?._m0 = dict["_m7"] }   // M7
-        if dict["_m8"] != nil { dataItem?._m0 = dict["_m8"] }   // M8
-        if dict["_m9"] != nil { dataItem?._m0 = dict["_m9"] }   // M9
+        if dict[Keys.m0] != nil { dataItem?._m0 = dict[Keys.m0] }   // M0
+        if dict[Keys.m1] != nil { dataItem?._m1 = dict[Keys.m1] }   // M1
+        if dict[Keys.m2] != nil { dataItem?._m2 = dict[Keys.m2] }   // M2
+        if dict[Keys.m3] != nil { dataItem?._m3 = dict[Keys.m3] }   // M3
+        if dict[Keys.m4] != nil { dataItem?._m4 = dict[Keys.m4] }   // M4
+        if dict[Keys.m5] != nil { dataItem?._m5 = dict[Keys.m5] }   // M5
+        if dict[Keys.m6] != nil { dataItem?._m6 = dict[Keys.m6] }   // M6
+        if dict[Keys.m7] != nil { dataItem?._m7 = dict[Keys.m7] }   // M7
+        if dict[Keys.m8] != nil { dataItem?._m8 = dict[Keys.m8] }   // M8
+        if dict[Keys.m9] != nil { dataItem?._m9 = dict[Keys.m9] }   // M9
         
         // Save new item
         mapper.save(dataItem!, completionHandler: {
@@ -281,20 +266,69 @@ public class CloudManager {
             
             // If there was an error, print the error and return completion
             if let error = error {
-                print("Error in CloudManager.uploadMeta(): \(error)")
+                print("Error in CloudManager.uploadMetadata(): \(error)")
                 completion?(false); return
             }
             
             // If there was no error, print a notification that upload was successful
-            print("Message from CloudManager.uploadMeta(): Metadata upload successful")
+            print("Message from CloudManager.uploadMetadata(): Metadata upload successful")
             completion?(true)
             
         })
         
     }
     
+    // Define function for querying metadata between two dates
+    public func queryMetadata(fromDate beginDate: Date, toDate endDate: Date, completion: ((Bool, [DatabaseClass]) -> Void)? = nil) {
+        
+        // Initialize placeholder return items
+        var returnItem = [DatabaseClass]()
+        
+        // Convert startDate and stopDate to strings
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyyMMddHHmmss"
+        let fromDate = formatter.string(from: beginDate)
+        let toDate = formatter.string(from: endDate)
+        
+        // Initialize object mapper
+        let mapper = AWSDynamoDBObjectMapper.default()
+        
+        // Set filter settings
+        let queryExpression = AWSDynamoDBQueryExpression()
+        // Set conditions for keys
+        queryExpression.keyConditionExpression = "#userID = :userID AND #eventDate BETWEEN :fromDate AND :toDate"
+        // Map condition names to names in ProviderData database
+        queryExpression.expressionAttributeNames = ["#userID": "userID", "#eventDate": "eventDate"]
+        // Map condition values to corresponding variables defined in this function
+        queryExpression.expressionAttributeValues = [":userID": self.userID, ":fromDate": fromDate, ":toDate": toDate]
+        
+        // Scan ProviderData with filter
+        mapper.query(DatabaseClass.self, expression: queryExpression).continueWith(block: { (task) -> Any? in
+            
+            // If there is an error, print a message and return completion
+            if let error = task.error as NSError? {
+                print("Error in CloudManager.queryMetadata(): \(error)"); completion?(false, returnItem)
+                
+                // If the query was successful...
+            } else if let dataItem = task.result {
+                if dataItem.items.count > 0 {
+                    
+                    // For each entry in the query...
+                    for entry in dataItem.items as! [DatabaseClass] {
+                        // Append entries to returnItem
+                        returnItem.append(entry)
+                    }
+                }
+                // Return completion
+                completion?(true, returnItem)
+            }
+            return nil
+        })
+        
+    }
+    
     // Define function for removing all user metadata from DynamoDB database
-    public func removeAllUserMetadata(forUser user: String, completion: ((Bool) -> Void)? = nil) {
+    public func removeAllUserMetadata(completion: ((Bool) -> Void)? = nil) {
         
         // Query all items for selected user and delete each item //
         
@@ -305,11 +339,11 @@ public class CloudManager {
         let queryExpression = AWSDynamoDBQueryExpression()
         
         // Set condition for key
-        queryExpression.keyConditionExpression = "#userId = :userID"
+        queryExpression.keyConditionExpression = "#userID = :userID"
         // Map condition name to name in ProviderData database
-        queryExpression.expressionAttributeNames = ["#userId": "userId"]
+        queryExpression.expressionAttributeNames = ["#userID": "userID"]
         // Map condition value to corresponding variable defined in this function
-        queryExpression.expressionAttributeValues = [":userName": user]
+        queryExpression.expressionAttributeValues = [":userName": self.userID]
         
         // Scan ProviderData with filter
         mapper.query(DatabaseClass.self, expression: queryExpression).continueWith(block: { (queryTask) -> Any? in
@@ -343,7 +377,7 @@ public class CloudManager {
 }
 
 // This is a generic class for uploading metadata to DynamoDB
-private class DatabaseClass: AWSDynamoDBObjectModel, AWSDynamoDBModeling {
+public class DatabaseClass: AWSDynamoDBObjectModel, AWSDynamoDBModeling {
     
     // Required table attributes
     @objc public var _userID: String?
@@ -363,37 +397,52 @@ private class DatabaseClass: AWSDynamoDBObjectModel, AWSDynamoDBModeling {
     @objc public var _m9: String?
     
     // Specify table name here
-    class func dynamoDBTableName() -> String {
+    public class func dynamoDBTableName() -> String {
         return CloudManager.tableName
     }
     
     // Create a table of key - property values
-    override class func jsonKeyPathsByPropertyKey() -> [AnyHashable: Any] {
+    override public class func jsonKeyPathsByPropertyKey() -> [AnyHashable: Any] {
         return [
-            "_userId" : "userId",
-            "_eventDate" : "eventDate",
-            "_m0" : "m0",
-            "_m1" : "m1",
-            "_m2" : "m2",
-            "_m3" : "m3",
-            "_m4" : "m4",
-            "_m5" : "m5",
-            "_m6" : "m6",
-            "_m7" : "m7",
-            "_m8" : "m8",
-            "_m9" : "m9",
+            Keys.hash : "userID",
+            Keys.range : "eventDate",
+            Keys.m0 : "m0",
+            Keys.m1 : "m1",
+            Keys.m2 : "m2",
+            Keys.m3 : "m3",
+            Keys.m4 : "m4",
+            Keys.m5 : "m5",
+            Keys.m6 : "m6",
+            Keys.m7 : "m7",
+            Keys.m8 : "m8",
+            Keys.m9 : "m9",
         ]
     }
     
     // Hash key attribute (do not modify)
-    class func hashKeyAttribute() -> String {
+    public class func hashKeyAttribute() -> String {
         return "_userID"
     }
     
     // Range key attribute (do not modify)
-    class func rangeKeyAttribute() -> String {
+    public class func rangeKeyAttribute() -> String {
         return "_eventDate"
     }
     
-    
+}
+
+// Class holding database key names (preventing formatting errors)
+public class Keys {
+    static let hash = "_userID"
+    static let range = "_eventDate"
+    static let m0 = "_m0"
+    static let m1 = "_m1"
+    static let m2 = "_m2"
+    static let m3 = "_m3"
+    static let m4 = "_m4"
+    static let m5 = "_m5"
+    static let m6 = "_m6"
+    static let m7 = "_m7"
+    static let m8 = "_m8"
+    static let m9 = "_m9"
 }

@@ -307,14 +307,57 @@ public class LibraData {
     
     // Function for uploading metadata to remote database
     public func uploadMetadataToRemote(completion: ((Bool) -> Void)? = nil) {
+        
+        // Ensure that data has been written to self.metadata
+        guard !self.metadata.isEmpty else {
+            // Print error message and return completion
+            print("Error in LibraData.uploadMetaDataToRemote(): No data written to LibraData.metadata")
+            completion?(false); return
+        }
+        
+        // Ensure that dictionary contains values for hash and range keys
+        // Hash Key
+        guard self.metadata[Keys.hash] != nil else {
+            // Print error and return completion
+            print("Error in LibraData.uploadMetaDataToRemote(): No value for _userID (Keys.hash) attribute")
+            completion?(false); return
+        }
+        
+        // Range Key
+        guard self.metadata[Keys.range] != nil else {
+            // Print error and return completion
+            print("Error in LibraData.uploadMetaDataToRemote(): No value for _eventDate (Keys.range) attribute")
+            completion?(false); return
+        }
+        
         self.cloudManager.uploadMetadata(forDictionary: self.metadata) { (success) in
             // If successful, print notification and return completion
             if success {
-                print("Metadata Upload Successful"); completion?(true)
+                print("Message from LibraData.uploadMetadataToRemote: Upload successful"); completion?(true)
             } else {
-                // If not successful, print notification and return completion
-                print("Error in LibraData.uploadMetadataToRemote(): Unable to upload metadata")
+                // If not successful, return completion
                 completion?(false)
+            }
+        }
+    }
+    
+    // Function for querying metadata from remote database (returns DatabaseClass object)
+    public func queryMetadataFromRemote(fromDate startDate: Date, toDate endDate: Date, completion: ((Bool, [DatabaseClass]) -> Void)? = nil) {
+        
+        // Ensure that the begin date precedes the end date
+        guard startDate <= endDate else {
+            // Print error and return completion
+            print("Error in LibraData.queryMetadataFromRemote(): beginDate must precede endDate")
+            completion?(false, [DatabaseClass]()); return
+        }
+        
+        self.cloudManager.queryMetadata(fromDate: startDate, toDate: endDate) { (success, data) in
+            // If successful, print notification and return completion
+            if success {
+                print("Message from LibraData.queryMetadataFromRemote(): Query successful"); completion?(true, data)
+            } else {
+                // If not successful, return completion
+                completion?(false, [DatabaseClass]())
             }
         }
     }
@@ -354,7 +397,7 @@ public class LibraData {
             }
             
             // Print error message
-            print("Upload Failed: Retry at a later time with LibraData.retryFailedUploads()")
+            print("Message from LibraData.uploadDataToRemote(): Retry upload at a later time with LibraData.retryFailedUploads()")
             
             // Attempt to obtain a list of filepaths from libraerrorlogs.txt
             if FileManager.default.fileExists(atPath: self.errorLocalFilenames.path) && FileManager.default.fileExists(atPath: self.errorRemoteFilenames.path) {
@@ -365,7 +408,7 @@ public class LibraData {
                 // Ensure that both arrays have the same length. Else, logfiles are corrupted.
                 guard local.count == remote.count else {
                     // Print error, clear logs, and return
-                    print("Error in LibraData.uploadData: Libra Error Logs corrupted. Clearing cache.")
+                    print("Error in LibraData.uploadDataToRemote(): Libra Error Logs corrupted. Clearing cache.")
                     self.clearErrorLogs()                   // Clear error logs
                     self.removeLocalFile(atPath: localPath) // Remove most recent file (not added to logs yet)
                     return
