@@ -215,7 +215,7 @@ public class LibraData {
             
             // Write output features (labels) to string
             for j in 0..<self.numOutputFeatures {
-                dataString += "\(self.data[LibraDataKeys.labels.rawValue]![j][i])"
+                dataString += "\(self.data[LibraDataKeys.labels.rawValue]![i][j])"
                 
                 // Append comma for all entries but the last one
                 if j != self.numOutputFeatures-1 {
