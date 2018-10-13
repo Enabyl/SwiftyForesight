@@ -433,16 +433,16 @@ public class DatabaseClass: AWSDynamoDBObjectModel, AWSDynamoDBModeling {
 
 // Class holding database key names (preventing formatting errors)
 public class Keys {
-    static let hash = "_userID"
-    static let range = "_eventDate"
-    static let m0 = "_m0"
-    static let m1 = "_m1"
-    static let m2 = "_m2"
-    static let m3 = "_m3"
-    static let m4 = "_m4"
-    static let m5 = "_m5"
-    static let m6 = "_m6"
-    static let m7 = "_m7"
-    static let m8 = "_m8"
-    static let m9 = "_m9"
+    public static let hash = "_userID"
+    public static let range = "_eventDate"
+    public static let m0 = "_m0"
+    public static let m1 = "_m1"
+    public static let m2 = "_m2"
+    public static let m3 = "_m3"
+    public static let m4 = "_m4"
+    public static let m5 = "_m5"
+    public static let m6 = "_m6"
+    public static let m7 = "_m7"
+    public static let m8 = "_m8"
+    public static let m9 = "_m9"
 }
