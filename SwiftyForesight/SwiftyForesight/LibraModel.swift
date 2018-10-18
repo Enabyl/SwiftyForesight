@@ -297,7 +297,7 @@ public class FeedforwardModel: LibraModel {
         }
         
         // Return output vector
-        output = outputVector.featureValue(for: self.featureNames[3])?.multiArrayValue ?? output
+        output = outputVector.featureValue(for: self.featureNames[1])?.multiArrayValue ?? output
         return output
         
     }
