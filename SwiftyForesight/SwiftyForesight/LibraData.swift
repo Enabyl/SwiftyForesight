@@ -142,8 +142,8 @@ public class LibraData {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyyMMddHHmmss"
         
-        // Set save path
-        let savePath = self.rootFilepath.appendingPathComponent("\(cloudManager.userID)_\(formatter.string(from: Date())).csv")
+        // Set save path (<userID>_<eventDate>_data.csv
+        let savePath = self.rootFilepath.appendingPathComponent("\(cloudManager.userID)_\(formatter.string(from: Date()))_data.csv")
         
         // Set placeholder for string
         var dataString: String = ""

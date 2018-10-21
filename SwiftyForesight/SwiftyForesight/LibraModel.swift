@@ -45,7 +45,7 @@ public class LibraModel {
     }
     
     // Function for downloading and compiling model from server
-    public func fetchFromRemote(withRemoteFilename filename: String) {
+    public func fetchFromRemote(withRemoteFilename filename: String, completion: ((Bool) -> Void)? = nil) {
         
         // Steps for fetching model include:
         // 1. Download model file to specified destination using CloudManager
@@ -55,7 +55,7 @@ public class LibraModel {
         cloudManager.downloadFile(Remote: filename, Local: self.localFilepath) { (success) in
             
             // Continue if the download was successful
-            guard success else {return}
+            guard success else {completion?(false); return}
             
             // Compile the model located in the specified URL
             do {
@@ -79,14 +79,17 @@ public class LibraModel {
             } catch {
                 // Print error
                 print("Error in LibraData.fetchFromRemote(): Unable to compile model after download")
+                completion?(false)
             }
             
             // In either case, delete model file when complete to allow for subsequent overwrite
             do {
                 try FileManager.default.removeItem(at: self.localFilepath)
+                completion?(true)
             } catch {
                 // Print error
                 print("Error in LibraData.fetchFromRemote(): Unable to remove local model file. Subsequent downloads may be unsuccessful unless a new local filepath is set.")
+                completion?(false)
             }
             
         }
@@ -308,7 +311,7 @@ public class FeedforwardModel: LibraModel {
 // MARK: Feature Providers
 // Sequential Models feature provider
 private class SequentialModelFeatureProvider: MLFeatureProvider {
-
+    
     // Initialize model placeholders
     var input: MLMultiArray         // Input vector
     var hidden: MLMultiArray? = nil // Hidden state
@@ -321,7 +324,7 @@ private class SequentialModelFeatureProvider: MLFeatureProvider {
     public var featureNames: Set<String> {
         get { return Set<String>(self.features) }
     }
-
+    
     // Return feature values from feature names
     public func featureValue(for featureName: String) -> MLFeatureValue? {
         // Return feature based on feature name
@@ -338,7 +341,7 @@ private class SequentialModelFeatureProvider: MLFeatureProvider {
             return nil
         }
     }
-
+    
     public init(input: MLMultiArray, features: [String], hidden: MLMultiArray? = nil, output: MLMultiArray? = nil) {
         // Set attribute values
         self.input = input
@@ -346,12 +349,12 @@ private class SequentialModelFeatureProvider: MLFeatureProvider {
         self.hidden = hidden
         self.output = output
     }
-
+    
 }
 
 // Feedforward Models feature provider
 private class FeedforwardModelFeatureProvider: MLFeatureProvider {
-
+    
     // Initialize model placeholders
     var input: MLMultiArray     // Input Vector
     
@@ -362,7 +365,7 @@ private class FeedforwardModelFeatureProvider: MLFeatureProvider {
     public var featureNames: Set<String> {
         get { return Set<String>(features) }
     }
-
+    
     public func featureValue(for featureName: String) -> MLFeatureValue? {
         // Return feature based on feature name
         switch featureName {
@@ -374,11 +377,11 @@ private class FeedforwardModelFeatureProvider: MLFeatureProvider {
             return nil
         }
     }
-
+    
     public init(input: MLMultiArray, features: [String]) {
         // Set attribute values
         self.input = input
         self.features = features
     }
-
+    
 }
