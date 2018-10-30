@@ -136,14 +136,19 @@ public class LibraData {
     
     // Function for formatting .csv file from LibraData object
     // The output will be a Data object saved to a specified URL with specified filename
-    public func formatData(completion: ((Bool, Data, URL) -> Void)? = nil) {
+    public func formatData(saveFileName fileName: String? = nil, completion: ((Bool, Data, URL) -> Void)? = nil) {
         
         // Initialize formatter to format date (for filename)
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyyMMddHHmmss"
         
         // Set save path (<userID>_<eventDate>_data.csv
-        let savePath = self.rootFilepath.appendingPathComponent("\(cloudManager.userID)_\(formatter.string(from: Date()))_data.csv")
+        var savePath: URL
+        if fileName != nil {
+            savePath = self.rootFilepath.appendingPathComponent(fileName!)
+        } else {
+            savePath = self.rootFilepath.appendingPathComponent("\(cloudManager.userID)_\(formatter.string(from: Date()))_data.csv")
+        }
         
         // Set placeholder for string
         var dataString: String = ""
