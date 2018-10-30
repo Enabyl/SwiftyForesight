@@ -51,6 +51,16 @@ public class LibraModel {
         // 1. Download model file to specified destination using CloudManager
         // 2. Try to compile the model. If successful, update model attribute
         
+        // Remove the old model file if it is already present at the local filepath
+        if FileManager.default.fileExists(atPath: self.localFilepath.path) {
+            do {
+                try FileManager.default.removeItem(at: self.localFilepath)
+            } catch {
+                // Print error message (for debugging)
+                print("Error in LibraModel.fetchFromRemote(): Unable to overwrite existing model")
+            }
+        }
+        
         // Download model file using CloudManager
         cloudManager.downloadFile(Remote: filename, Local: self.localFilepath) { (success) in
             
@@ -78,7 +88,7 @@ public class LibraModel {
                 
             } catch {
                 // Print error
-                print("Error in LibraData.fetchFromRemote(): Unable to compile model after download")
+                print("Error in LibraModel.fetchFromRemote(): Unable to compile model after download")
                 completion?(false)
             }
             
@@ -88,7 +98,7 @@ public class LibraModel {
                 completion?(true)
             } catch {
                 // Print error
-                print("Error in LibraData.fetchFromRemote(): Unable to remove local model file. Subsequent downloads may be unsuccessful unless a new local filepath is set.")
+                print("Error in LibraModel.fetchFromRemote(): Unable to remove local model file. Subsequent downloads may be unsuccessful unless a new local filepath is set.")
                 completion?(false)
             }
             
