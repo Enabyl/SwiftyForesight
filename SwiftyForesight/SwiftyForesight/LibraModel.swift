@@ -122,6 +122,7 @@ public class SequentialModel: LibraModel {
     // Define a placeholder for the input feature names of this model
     // Note that the default names are input1, lstm_1_h_in, lstm_1_c_in, output1
     private var featureNames = ["input1", "lstm_1_h_in", "lstm_1_c_in", "output1"]
+    private var outputNames = ["lstm_1_h_out", "lstm_1_c_out"]
     
     // Function for setting custom feature names in model
     // For LSTM model, default names are: input1, lstm_1_h_in, lstm_1_c_in, output1
@@ -131,13 +132,29 @@ public class SequentialModel: LibraModel {
         // Verify that there are three names provided
         guard names.count == self.featureNames.count else {
             // Print error and return
-            print("Error in SequentialModel.setFeatureNames(): Name vector should contain 3 elements\n")
-            print("Proper Order: [input, hidden_state, output_state]")
-            return
+            print("Error in SequentialModel.setFeatureNames(): Name vector should contain \(self.featureNames.count) elements\n")
+            print("Proper Order: [input, hidden_state, output_state]"); return
         }
         
         // Set feature names
         self.featureNames = names
+        
+    }
+    
+    // Function for setting custom output names in model
+    // For LSTM model, default names are: input1, lstm_1_h_out, lstm_1_c_out
+    // The names provided should correspond do the hidden state and output state respectively
+    public func setOutputNames(to names: [String]) {
+        
+        // Verify that there are two names provided
+        guard names.count == self.outputNames.count else {
+            // Print error and return
+            print("Error in SequentialModel.setOutputNames(): Name vector should contain \(self.outputNames.count) elements\n")
+            print("Proper Order: [hidden_state, output_state]"); return
+        }
+        
+        // Set output names
+        self.outputNames = names
         
     }
     
@@ -183,6 +200,7 @@ public class SequentialModel: LibraModel {
         
         // 2. Create placeholders for input and output data
         let inputVector = try? MLMultiArray(shape: [NSNumber(value: self.numFeatures)], dataType: MLMultiArrayDataType.double)
+        
         var outputVector: MLFeatureProvider
         
         // Populate placeholder with input vectors
@@ -210,7 +228,7 @@ public class SequentialModel: LibraModel {
             // Generate input vector
             for j in 0..<self.numFeatures { inputVector![j] = NSNumber(value: input[j][i]) }
             // Construct model input with MLFeatureProvider protocol
-            modelInput = SequentialModelFeatureProvider(input: inputVector!, features: Array(self.featureNames.dropLast()), hidden: outputVector.featureValue(for: self.featureNames[1])?.multiArrayValue, output: outputVector.featureValue(for: self.featureNames[2])?.multiArrayValue)
+            modelInput = SequentialModelFeatureProvider(input: inputVector!, features: Array(self.featureNames.dropLast()), hidden: outputVector.featureValue(for: self.outputNames[0])?.multiArrayValue, output: outputVector.featureValue(for: self.outputNames[1])?.multiArrayValue)
             
             // Obtain model output
             do {
@@ -332,7 +350,7 @@ private class SequentialModelFeatureProvider: MLFeatureProvider {
     
     // Set computed value for returning feature names
     public var featureNames: Set<String> {
-        get { return Set<String>(self.features) }
+        get { return Set<String>(features) }
     }
     
     // Return feature values from feature names
