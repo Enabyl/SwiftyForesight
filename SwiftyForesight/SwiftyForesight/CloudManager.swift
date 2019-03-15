@@ -249,16 +249,16 @@ public class CloudManager {
         dataItem?._eventDate = dict[Keys.range] // Range Key (eventDate)
         
         // Add additional metadata fields if provided by the user
-        if dict[Keys.m0] != nil { dataItem?._m0 = dict[Keys.m0] }   // M0
-        if dict[Keys.m1] != nil { dataItem?._m1 = dict[Keys.m1] }   // M1
-        if dict[Keys.m2] != nil { dataItem?._m2 = dict[Keys.m2] }   // M2
-        if dict[Keys.m3] != nil { dataItem?._m3 = dict[Keys.m3] }   // M3
-        if dict[Keys.m4] != nil { dataItem?._m4 = dict[Keys.m4] }   // M4
-        if dict[Keys.m5] != nil { dataItem?._m5 = dict[Keys.m5] }   // M5
-        if dict[Keys.m6] != nil { dataItem?._m6 = dict[Keys.m6] }   // M6
-        if dict[Keys.m7] != nil { dataItem?._m7 = dict[Keys.m7] }   // M7
-        if dict[Keys.m8] != nil { dataItem?._m8 = dict[Keys.m8] }   // M8
-        if dict[Keys.m9] != nil { dataItem?._m9 = dict[Keys.m9] }   // M9
+        if dict[Keys.m0] != nil { dataItem?._m0 = dict[Keys.m0] } else { dataItem?._m0 = "nil" }    // M0
+        if dict[Keys.m1] != nil { dataItem?._m1 = dict[Keys.m1] } else { dataItem?._m1 = "nil" }    // M1
+        if dict[Keys.m2] != nil { dataItem?._m2 = dict[Keys.m2] } else { dataItem?._m2 = "nil" }    // M2
+        if dict[Keys.m3] != nil { dataItem?._m3 = dict[Keys.m3] } else { dataItem?._m3 = "nil" }    // M3
+        if dict[Keys.m4] != nil { dataItem?._m4 = dict[Keys.m4] } else { dataItem?._m4 = "nil" }    // M4
+        if dict[Keys.m5] != nil { dataItem?._m5 = dict[Keys.m5] } else { dataItem?._m5 = "nil" }    // M5
+        if dict[Keys.m6] != nil { dataItem?._m6 = dict[Keys.m6] } else { dataItem?._m6 = "nil" }    // M6
+        if dict[Keys.m7] != nil { dataItem?._m7 = dict[Keys.m7] } else { dataItem?._m7 = "nil" }    // M7
+        if dict[Keys.m8] != nil { dataItem?._m8 = dict[Keys.m8] } else { dataItem?._m8 = "nil" }    // M8
+        if dict[Keys.m9] != nil { dataItem?._m9 = dict[Keys.m9] } else { dataItem?._m9 = "nil" }    // M9
         
         // Save new item
         mapper.save(dataItem!, completionHandler: {
